@@ -46,7 +46,7 @@ app.post("/login", (req, res) => {
   db.query(sql, [email], (err, results) => {
     if (err) {
       console.error("Error executing the query: ", err);
-      return res.status(500).json({ message: "Internal Server Error" });
+      return res.status(500).json({ message: "Internal Server Error"});
     }
 
     if (results.length === 0) {
@@ -70,7 +70,7 @@ app.post("/login", (req, res) => {
         expiresIn: "1h",
       });
 
-      return res.json({ token });
+      return res.json({message:"success", token });
     });
   });
 });
@@ -80,24 +80,26 @@ app.post('/register', async (req, res) => {
   try {
     const { username, email, mobile, password } = req.body;
 
+    console.log(req.body.username, req.body.email)
+
     // Check if the user already exists in the database
     const checkUserSql = 'SELECT * FROM complaint_users WHERE email = ?';
     db.query(checkUserSql, [email], (err, results) => {
       if (err) {
         console.error('Error executing the query:', err);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ message: 'Internal Server Error' });
       }
 
       if (results.length > 0) {
         // User with the provided email already exists
-        return res.status(409).json({ error: 'User already exists' });
+        return res.status(409).json({ message: 'User already exists' });
       }
 
       // User is not registered, proceed with registration
       bcrypt.hash(password, 10, (bcryptErr, hashedPassword) => {
         if (bcryptErr) {
           console.error('Error hashing password:', bcryptErr);
-          return res.status(500).json({ error: 'Internal Server Error' });
+          return res.status(500).json({ message: 'Internal Server Error' });
         }
 
         const registerSql = 'INSERT INTO complaint_users (`username`, `email`, `mobile`, `password`) VALUES (?, ?, ?, ?)';
@@ -106,10 +108,10 @@ app.post('/register', async (req, res) => {
         db.query(registerSql, registerValues, (registerErr, result) => {
           if (registerErr) {
             console.error('Error executing the query:', registerErr);
-            return res.status(500).json({ error: 'Internal Server Error' });
+            return res.status(500).json({ message: 'Internal Server Error' });
           }
 
-          return res.json({ status: 'success' });
+          return res.json({ message: 'success' });
         });
       });
     });
