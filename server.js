@@ -37,16 +37,16 @@ app.listen(8081, () => {
 });
 
 app.post("/login", (req, res) => {
-  const { email, password } = req.body;
+  const { uhid, password } = req.body;
 
-  console.log(email);
+  console.log(uhid);
   console.log(password);
   // Check if the user exists in the database
-  const sql = "SELECT * FROM complaint_users WHERE email = ?";
-  db.query(sql, [email], (err, results) => {
+  const sql = "SELECT * FROM complaint_users WHERE uhid = ?";
+  db.query(sql, [uhid], (err, results) => {
     if (err) {
       console.error("Error executing the query: ", err);
-      return res.status(500).json({ message: "Internal Server Error"});
+      return res.status(500).json({ message: "Internal Server Error" });
     }
 
     if (results.length === 0) {
@@ -66,11 +66,11 @@ app.post("/login", (req, res) => {
       }
 
       // Create and sign a JSON Web Token (JWT)
-      const token = jwt.sign({ id: user.id, email: user.email }, "Athulya", {
+      const token = jwt.sign({ id: user.id, uhid: user.uhid }, "Athulya", {
         expiresIn: "1h",
       });
 
-      return res.json({message:"success", token });
+      return res.json({ message: "success", token });
     });
   });
 });
@@ -78,9 +78,9 @@ app.post("/login", (req, res) => {
 
 app.post('/register', async (req, res) => {
   try {
-    const { username, email, mobile, password } = req.body;
+    const { username, uhid, email, mobile, password } = req.body;
 
-    console.log(req.body.username, req.body.email)
+    console.log(req.body.username, req.body.email, req.body.uhid)
 
     // Check if the user already exists in the database
     const checkUserSql = 'SELECT * FROM complaint_users WHERE email = ?';
@@ -102,7 +102,7 @@ app.post('/register', async (req, res) => {
           return res.status(500).json({ message: 'Internal Server Error' });
         }
 
-        const registerSql = 'INSERT INTO complaint_users (`username`, `email`, `mobile`, `password`) VALUES (?, ?, ?, ?)';
+        const registerSql = 'INSERT INTO complaint_users (`username`,`uhid`, `email`, `mobile`, `password`) VALUES (?,?,?, ?, ?)';
         const registerValues = [username, email, mobile, hashedPassword];
 
         db.query(registerSql, registerValues, (registerErr, result) => {
