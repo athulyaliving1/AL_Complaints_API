@@ -24,6 +24,7 @@ app.use(morgan('dev'));
 
 var db = mysql.createConnection({
   host: "localhost",
+  port: 3306,
   user: "root",
   password: "",
   database: "nodeapp"
@@ -54,8 +55,8 @@ app.post("/login", (req, res) => {
     }
 
     // Compare the password with the hashed password stored in the database
-    const user = results[0];
-    bcrypt.compare(password, user.password, (bcryptErr, bcryptResult) => {
+    const userdata = results[0];
+    bcrypt.compare(password, userdata.password, (bcryptErr, bcryptResult) => {
       if (bcryptErr) {
         console.error("Error comparing passwords: ", bcryptErr);
         return res.status(500).json({ message: "Internal Server Error" });
@@ -66,11 +67,11 @@ app.post("/login", (req, res) => {
       }
 
       // Create and sign a JSON Web Token (JWT)
-      const token = jwt.sign({ id: user.id, uhid: user.uhid }, "Athulya", {
+      const token = jwt.sign({ id: userdata.id, uhid: userdata.uhid }, "Athulya", {
         expiresIn: "1h",
       });
 
-      return res.json({ message: "success", token });
+      return res.json({ message: "success", token, userdata, login:"isLoggedIn"});
     });
   });
 });
@@ -78,9 +79,9 @@ app.post("/login", (req, res) => {
 
 app.post('/register', async (req, res) => {
   try {
-    const { username, uhid, email, mobile, password } = req.body;
+    const { uhid, email, mobile, password } = req.body;
 
-    console.log(req.body.username, req.body.email, req.body.uhid)
+    console.log(req.body.uhid, req.body.email, req.body.uhid)
 
     // Check if the user already exists in the database
     const checkUserSql = 'SELECT * FROM complaint_users WHERE email = ?';
@@ -102,8 +103,8 @@ app.post('/register', async (req, res) => {
           return res.status(500).json({ message: 'Internal Server Error' });
         }
 
-        const registerSql = 'INSERT INTO complaint_users (`username`,`uhid`, `email`, `mobile`, `password`) VALUES (?,?,?, ?, ?)';
-        const registerValues = [username, email, mobile, hashedPassword];
+        const registerSql = 'INSERT INTO complaint_users (`uhid`, `email`, `mobile`, `password`) VALUES (?,?,?,?)';
+        const registerValues = [uhid, email, mobile, hashedPassword];
 
         db.query(registerSql, registerValues, (registerErr, result) => {
           if (registerErr) {
@@ -143,3 +144,51 @@ app.post("/getpage", (req, res) => {
   });
 
 });
+
+
+
+
+
+app.get('/users/:id', function (req, res) {
+  console.log(req.params.id);
+
+  let sql = "SELECT * FROM complaint_users WHERE id=" + req.params.id;
+  let query = db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.send(JSON.stringify({ status: 200, error: null, response: result }));
+    console.log(result);
+  });
+
+})
+
+
+
+
+
+app.get('/clientsvitals/:id', function (req, res) {
+  let sql = "SELECT activity_timing, activity_bp_systole, activity_bp_diastole, activity_temp, activity_pulse, activity_resp, activity_pain_score FROM patient_activity_vitals WHERE patient_id=" + req.params.id;
+  console.log(req.params.id);
+
+  let query = db.query(sql, (err, result) => {
+    if (err) throw err;
+    res.send(JSON.stringify({ status: 200, error: null, response: result }));
+    console.log(result);
+  });
+});
+
+
+
+app.get('/foodmenu', function (req,res) {
+  //  let sql ="SELECT food_type,image_blob,menu_items FROM food_tracker WHERE branch='Neelankarai' and created_at='2023-01-31 15:11:05'"
+   let sql ="SELECT food_type,menu_items FROM food_tracker WHERE branch='Neelankarai' and created_at='2023-01-31 15:11:05'"
+
+   console.log(req.params.id);
+
+   let query = db.query(sql,(err,result) =>{
+    if (err) throw err;
+    res.send(JSON.stringify({status:200,error:null,reponse:result}))
+    console.log(result)
+   })
+})
+
+
